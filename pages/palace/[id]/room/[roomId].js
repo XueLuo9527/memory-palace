@@ -7,7 +7,10 @@ export default function RoomDetail() {
   const router = useRouter()
   const { id, roomId } = router.query
   const [room, setRoom] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [editMemory, setEditMemory] = useState(null)
   const [newMemoryTitle, setNewMemoryTitle] = useState('')
   const [newMemoryContent, setNewMemoryContent] = useState('')
   const [loading, setLoading] = useState(true)
@@ -20,10 +23,13 @@ export default function RoomDetail() {
 
   const fetchRoom = async () => {
     try {
-      const res = await fetch(`/api/palaces/${id}`)
+      const res = await fetch(`/api/palaces/${id}?roomId=${roomId}`)
       const data = await res.json()
-      const foundRoom = data.rooms.find(r => r.id === parseInt(roomId))
-      setRoom(foundRoom)
+      if (data.error) {
+        setRoom(null)
+      } else {
+        setRoom(data)
+      }
       setLoading(false)
     } catch (error) {
       console.error('获取房间详情失败:', error)
@@ -31,13 +37,107 @@ export default function RoomDetail() {
     }
   }
 
+  const handleSearch = async (e) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) {
+      setSearchResults(null)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/palaces/${id}?search=${encodeURIComponent(searchQuery)}`)
+      const data = await res.json()
+      setSearchResults(data)
+    } catch (error) {
+      console.error('搜索失败:', error)
+    }
+  }
+
   const handleCreateMemory = async (e) => {
     e.preventDefault()
     if (!newMemoryTitle.trim()) return
 
-    // TODO: 实现记忆创建 API
-    alert('记忆功能开发中... 明天继续！😊')
+    try {
+      const res = await fetch(`/api/palaces/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: parseInt(roomId),
+          title: newMemoryTitle,
+          content: newMemoryContent
+        })
+      })
+      
+      if (res.ok) {
+        await fetchRoom()
+        setShowModal(false)
+        setNewMemoryTitle('')
+        setNewMemoryContent('')
+      }
+    } catch (error) {
+      console.error('创建记忆失败:', error)
+    }
+  }
+
+  const handleEditMemory = (memory) => {
+    setEditMemory(memory)
+    setNewMemoryTitle(memory.title)
+    setNewMemoryContent(memory.content)
+    setShowModal(true)
+  }
+
+  const handleUpdateMemory = async (e) => {
+    e.preventDefault()
+    if (!newMemoryTitle.trim() || !editMemory) return
+
+    try {
+      const res = await fetch(`/api/palaces/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: parseInt(roomId),
+          memoryId: editMemory.id,
+          title: newMemoryTitle,
+          content: newMemoryContent
+        })
+      })
+      
+      if (res.ok) {
+        await fetchRoom()
+        setShowModal(false)
+        setEditMemory(null)
+        setNewMemoryTitle('')
+        setNewMemoryContent('')
+      }
+    } catch (error) {
+      console.error('更新记忆失败:', error)
+    }
+  }
+
+  const handleDeleteMemory = async (memoryId) => {
+    if (!confirm('确定要删除这条记忆吗？')) return
+
+    try {
+      const res = await fetch(`/api/palaces/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: parseInt(roomId),
+          memoryId
+        })
+      })
+      
+      if (res.ok) {
+        await fetchRoom()
+      }
+    } catch (error) {
+      console.error('删除记忆失败:', error)
+    }
+  }
+
+  const closeModal = () => {
     setShowModal(false)
+    setEditMemory(null)
     setNewMemoryTitle('')
     setNewMemoryContent('')
   }
@@ -58,6 +158,8 @@ export default function RoomDetail() {
     )
   }
 
+  const displayMemories = searchResults || room.memories
+
   return (
     <>
       <Head>
@@ -71,7 +173,8 @@ export default function RoomDetail() {
           <Link href={`/palace/${id}`} className="text-white/80 hover:text-white mb-4 inline-block">
             ← 返回宫殿
           </Link>
-          <div className="flex justify-between items-center">
+          
+          <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-4xl font-bold text-white mb-2">🚪 {room.name}</h1>
               <p className="text-white/70">{room.description}</p>
@@ -83,13 +186,44 @@ export default function RoomDetail() {
               + 添加记忆
             </button>
           </div>
+
+          {/* 搜索框 */}
+          <form onSubmit={handleSearch} className="mb-6">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50"
+                placeholder="🔍 搜索记忆..."
+              />
+              <button
+                type="submit"
+                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30"
+              >
+                搜索
+              </button>
+              {searchResults && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('')
+                    setSearchResults(null)
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30"
+                >
+                  清除
+                </button>
+              )}
+            </div>
+          </form>
         </div>
 
         {/* 记忆列表 */}
         <div className="max-w-6xl mx-auto">
-          {room.memories && room.memories.length > 0 ? (
+          {displayMemories && displayMemories.length > 0 ? (
             <div className="space-y-4">
-              {room.memories.map((memory) => (
+              {displayMemories.map((memory) => (
                 <div
                   key={memory.id}
                   className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all"
@@ -98,11 +232,22 @@ export default function RoomDetail() {
                   <p className="text-white/70 whitespace-pre-wrap">{memory.content}</p>
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-white/50 text-sm">
-                      {new Date(memory.createdAt).toLocaleString('zh-CN')}
+                      {new Date(memory.updatedAt || memory.createdAt).toLocaleString('zh-CN')}
                     </span>
-                    <button className="text-white/50 hover:text-white text-sm transition-colors">
-                      编辑
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleEditMemory(memory)}
+                        className="text-white/50 hover:text-white text-sm transition-colors"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMemory(memory.id)}
+                        className="text-white/50 hover:text-red-300 text-sm transition-colors"
+                      >
+                        删除
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -115,12 +260,14 @@ export default function RoomDetail() {
           )}
         </div>
 
-        {/* 添加记忆模态框 */}
+        {/* 添加/编辑记忆模态框 */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-gradient-to-br from-purple-900/90 to-indigo-900/90 rounded-xl p-8 max-w-md w-full border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-6">💭 添加记忆</h2>
-              <form onSubmit={handleCreateMemory}>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                {editMemory ? '✏️ 编辑记忆' : '💭 添加记忆'}
+              </h2>
+              <form onSubmit={editMemory ? handleUpdateMemory : handleCreateMemory}>
                 <div className="mb-4">
                   <label className="block text-white/80 text-sm mb-2">标题 *</label>
                   <input
@@ -145,7 +292,7 @@ export default function RoomDetail() {
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowModal(false)}
+                    onClick={closeModal}
                     className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg font-medium transition-all"
                   >
                     取消
@@ -154,7 +301,7 @@ export default function RoomDetail() {
                     type="submit"
                     className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-lg font-medium transition-all"
                   >
-                    保存
+                    {editMemory ? '更新' : '保存'}
                   </button>
                 </div>
               </form>
