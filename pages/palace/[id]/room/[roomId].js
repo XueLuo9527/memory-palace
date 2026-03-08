@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-
-// 临时用户 ID（后续接入认证系统）
-const USER_ID = 'demo-user-id'
+import { getCurrentUser, logout } from '../../../lib/auth'
 
 export default function RoomDetail() {
   const router = useRouter()
   const { id, roomId } = router.query
+  const [user, setUser] = useState(null)
   const [room, setRoom] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState(null)
@@ -19,14 +18,21 @@ export default function RoomDetail() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (id && roomId) {
-      fetchRoom()
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
     }
-  }, [id, roomId])
+    setUser(currentUser)
+    
+    if (id && roomId) {
+      fetchRoom(currentUser.id)
+    }
+  }, [id, roomId, router])
 
-  const fetchRoom = async () => {
+  const fetchRoom = async (userId) => {
     try {
-      const res = await fetch(`/api/palaces/${id}?userId=${USER_ID}&roomId=${roomId}`)
+      const res = await fetch(`/api/palaces/${id}?userId=${userId}&roomId=${roomId}`)
       const data = await res.json()
       if (data.error) {
         setRoom(null)
@@ -42,13 +48,13 @@ export default function RoomDetail() {
 
   const handleSearch = async (e) => {
     e.preventDefault()
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() || !user) {
       setSearchResults(null)
       return
     }
 
     try {
-      const res = await fetch(`/api/palaces/${id}?userId=${USER_ID}&search=${encodeURIComponent(searchQuery)}`)
+      const res = await fetch(`/api/palaces/${id}?userId=${user.id}&search=${encodeURIComponent(searchQuery)}`)
       const data = await res.json()
       setSearchResults(data)
     } catch (error) {
@@ -58,14 +64,14 @@ export default function RoomDetail() {
 
   const handleCreateMemory = async (e) => {
     e.preventDefault()
-    if (!newMemoryTitle.trim()) return
+    if (!newMemoryTitle.trim() || !user) return
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: USER_ID,
+          userId: user.id,
           roomId: roomId,
           title: newMemoryTitle,
           content: newMemoryContent
@@ -73,7 +79,7 @@ export default function RoomDetail() {
       })
       
       if (res.ok) {
-        await fetchRoom()
+        await fetchRoom(user.id)
         setShowModal(false)
         setNewMemoryTitle('')
         setNewMemoryContent('')
@@ -92,14 +98,14 @@ export default function RoomDetail() {
 
   const handleUpdateMemory = async (e) => {
     e.preventDefault()
-    if (!newMemoryTitle.trim() || !editMemory) return
+    if (!newMemoryTitle.trim() || !editMemory || !user) return
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: USER_ID,
+          userId: user.id,
           roomId: roomId,
           memoryId: editMemory.id,
           title: newMemoryTitle,
@@ -108,7 +114,7 @@ export default function RoomDetail() {
       })
       
       if (res.ok) {
-        await fetchRoom()
+        await fetchRoom(user.id)
         setShowModal(false)
         setEditMemory(null)
         setNewMemoryTitle('')
@@ -120,21 +126,21 @@ export default function RoomDetail() {
   }
 
   const handleDeleteMemory = async (memoryId) => {
-    if (!confirm('确定要删除这条记忆吗？')) return
+    if (!confirm('确定要删除这条记忆吗？') || !user) return
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: USER_ID,
+          userId: user.id,
           roomId: roomId,
           memoryId
         })
       })
       
       if (res.ok) {
-        await fetchRoom()
+        await fetchRoom(user.id)
       }
     } catch (error) {
       console.error('删除记忆失败:', error)
@@ -146,6 +152,12 @@ export default function RoomDetail() {
     setEditMemory(null)
     setNewMemoryTitle('')
     setNewMemoryContent('')
+  }
+
+  const handleLogout = () => {
+    if (!confirm('确定要退出登录吗？')) return
+    logout()
+    router.push('/login')
   }
 
   if (loading) {
@@ -176,9 +188,22 @@ export default function RoomDetail() {
       <div className="min-h-screen p-8">
         {/* 头部 */}
         <div className="max-w-6xl mx-auto mb-8">
-          <Link href={`/palace/${id}`} className="text-white/80 hover:text-white mb-4 inline-block">
-            ← 返回宫殿
-          </Link>
+          <div className="flex justify-between items-center mb-4">
+            <Link href={`/palace/${id}`} className="text-white/80 hover:text-white">
+              ← 返回宫殿
+            </Link>
+            {user && (
+              <div className="flex items-center gap-4">
+                <span className="text-white/80">👤 {user.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-white/60 hover:text-white text-sm transition-colors"
+                >
+                  退出
+                </button>
+              </div>
+            )}
+          </div>
           
           <div className="flex justify-between items-center mb-6">
             <div>

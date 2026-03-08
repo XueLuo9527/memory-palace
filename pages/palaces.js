@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-
-// 临时用户 ID（后续接入认证系统）
-const USER_ID = 'demo-user-id'
+import { getCurrentUser, logout } from '../lib/auth'
 
 export default function Palaces() {
+  const router = useRouter()
+  const [user, setUser] = useState(null)
   const [palaces, setPalaces] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [newPalaceName, setNewPalaceName] = useState('')
@@ -13,12 +14,18 @@ export default function Palaces() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchPalaces()
-  }, [])
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+    setUser(currentUser)
+    fetchPalaces(currentUser.id)
+  }, [router])
 
-  const fetchPalaces = async () => {
+  const fetchPalaces = async (userId) => {
     try {
-      const res = await fetch(`/api/palaces?userId=${USER_ID}`)
+      const res = await fetch(`/api/palaces?userId=${userId}`)
       const data = await res.json()
       setPalaces(data)
       setLoading(false)
@@ -30,21 +37,21 @@ export default function Palaces() {
 
   const handleCreatePalace = async (e) => {
     e.preventDefault()
-    if (!newPalaceName.trim()) return
+    if (!newPalaceName.trim() || !user) return
 
     try {
       const res = await fetch('/api/palaces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: USER_ID,
+          userId: user.id,
           name: newPalaceName,
           description: newPalaceDesc
         })
       })
       
       if (res.ok) {
-        await fetchPalaces()
+        await fetchPalaces(user.id)
         setShowModal(false)
         setNewPalaceName('')
         setNewPalaceDesc('')
@@ -55,21 +62,27 @@ export default function Palaces() {
   }
 
   const handleDeletePalace = async (id) => {
-    if (!confirm('确定要删除这座宫殿吗？')) return
+    if (!confirm('确定要删除这座宫殿吗？') || !user) return
 
     try {
       const res = await fetch('/api/palaces', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: USER_ID, id })
+        body: JSON.stringify({ userId: user.id, id })
       })
       
       if (res.ok) {
-        await fetchPalaces()
+        await fetchPalaces(user.id)
       }
     } catch (error) {
       console.error('删除宫殿失败:', error)
     }
+  }
+
+  const handleLogout = () => {
+    if (!confirm('确定要退出登录吗？')) return
+    logout()
+    router.push('/login')
   }
 
   return (
@@ -82,9 +95,22 @@ export default function Palaces() {
       <div className="min-h-screen p-8">
         {/* 头部 */}
         <div className="max-w-6xl mx-auto mb-8">
-          <Link href="/" className="text-white/80 hover:text-white mb-4 inline-block">
-            ← 返回首页
-          </Link>
+          <div className="flex justify-between items-center mb-4">
+            <Link href="/" className="text-white/80 hover:text-white">
+              ← 返回首页
+            </Link>
+            {user && (
+              <div className="flex items-center gap-4">
+                <span className="text-white/80">👤 {user.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-white/60 hover:text-white text-sm transition-colors"
+                >
+                  退出
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex justify-between items-center">
             <h1 className="text-4xl font-bold text-white">🏰 我的宫殿</h1>
             <button

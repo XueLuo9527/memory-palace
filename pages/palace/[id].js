@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-
-// 临时用户 ID（后续接入认证系统）
-const USER_ID = 'demo-user-id'
+import { getCurrentUser, logout } from '../../lib/auth'
 
 export default function PalaceDetail() {
   const router = useRouter()
   const { id } = router.query
+  const [user, setUser] = useState(null)
   const [palace, setPalace] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
@@ -16,14 +15,21 @@ export default function PalaceDetail() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (id) {
-      fetchPalace()
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
     }
-  }, [id])
+    setUser(currentUser)
+    
+    if (id) {
+      fetchPalace(currentUser.id)
+    }
+  }, [id, router])
 
-  const fetchPalace = async () => {
+  const fetchPalace = async (userId) => {
     try {
-      const res = await fetch(`/api/palaces/${id}?userId=${USER_ID}`)
+      const res = await fetch(`/api/palaces/${id}?userId=${userId}`)
       const data = await res.json()
       setPalace(data)
       setLoading(false)
@@ -35,21 +41,21 @@ export default function PalaceDetail() {
 
   const handleCreateRoom = async (e) => {
     e.preventDefault()
-    if (!newRoomName.trim()) return
+    if (!newRoomName.trim() || !user) return
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: USER_ID,
+          userId: user.id,
           name: newRoomName,
           description: newRoomDesc
         })
       })
       
       if (res.ok) {
-        await fetchPalace()
+        await fetchPalace(user.id)
         setShowModal(false)
         setNewRoomName('')
         setNewRoomDesc('')
@@ -60,21 +66,27 @@ export default function PalaceDetail() {
   }
 
   const handleDeleteRoom = async (roomId) => {
-    if (!confirm('确定要删除这个房间吗？')) return
+    if (!confirm('确定要删除这个房间吗？') || !user) return
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: USER_ID, roomId })
+        body: JSON.stringify({ userId: user.id, roomId })
       })
       
       if (res.ok) {
-        await fetchPalace()
+        await fetchPalace(user.id)
       }
     } catch (error) {
       console.error('删除房间失败:', error)
     }
+  }
+
+  const handleLogout = () => {
+    if (!confirm('确定要退出登录吗？')) return
+    logout()
+    router.push('/login')
   }
 
   if (loading) {
@@ -103,9 +115,22 @@ export default function PalaceDetail() {
       <div className="min-h-screen p-8">
         {/* 头部 */}
         <div className="max-w-6xl mx-auto mb-8">
-          <Link href="/palaces" className="text-white/80 hover:text-white mb-4 inline-block">
-            ← 返回宫殿列表
-          </Link>
+          <div className="flex justify-between items-center mb-4">
+            <Link href="/palaces" className="text-white/80 hover:text-white">
+              ← 返回宫殿列表
+            </Link>
+            {user && (
+              <div className="flex items-center gap-4">
+                <span className="text-white/80">👤 {user.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-white/60 hover:text-white text-sm transition-colors"
+                >
+                  退出
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-bold text-white mb-2">🏰 {palace.name}</h1>
