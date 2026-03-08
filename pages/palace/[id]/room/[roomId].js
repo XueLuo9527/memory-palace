@@ -15,6 +15,9 @@ export default function RoomDetail() {
   const [editMemory, setEditMemory] = useState(null)
   const [newMemoryTitle, setNewMemoryTitle] = useState('')
   const [newMemoryContent, setNewMemoryContent] = useState('')
+  const [newMemoryTags, setNewMemoryTags] = useState('')
+  const [selectedTag, setSelectedTag] = useState(null)
+  const [allTags, setAllTags] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -27,6 +30,7 @@ export default function RoomDetail() {
     
     if (id && roomId) {
       fetchRoom(currentUser.id)
+      fetchTags()
     }
   }, [id, roomId, router])
 
@@ -43,6 +47,36 @@ export default function RoomDetail() {
     } catch (error) {
       console.error('获取房间详情失败:', error)
       setLoading(false)
+    }
+  }
+
+  const fetchTags = async () => {
+    try {
+      const res = await fetch(`/api/palaces/${id}?userId=${user?.id}&getTags=true`)
+      const data = await res.json()
+      setAllTags(data)
+    } catch (error) {
+      console.error('获取标签失败:', error)
+    }
+  }
+
+  const handleTagFilter = (tag) => {
+    if (selectedTag === tag) {
+      setSelectedTag(null)
+      setSearchResults(null)
+    } else {
+      setSelectedTag(tag)
+      fetchMemoriesByTag(tag)
+    }
+  }
+
+  const fetchMemoriesByTag = async (tag) => {
+    try {
+      const res = await fetch(`/api/palaces/${id}?userId=${user.id}&tag=${encodeURIComponent(tag)}`)
+      const data = await res.json()
+      setSearchResults(data)
+    } catch (error) {
+      console.error('按标签筛选失败:', error)
     }
   }
 
@@ -66,6 +100,11 @@ export default function RoomDetail() {
     e.preventDefault()
     if (!newMemoryTitle.trim() || !user) return
 
+    const tagsArray = newMemoryTags
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0)
+
     try {
       const res = await fetch(`/api/palaces/${id}`, {
         method: 'POST',
@@ -74,15 +113,18 @@ export default function RoomDetail() {
           userId: user.id,
           roomId: roomId,
           title: newMemoryTitle,
-          content: newMemoryContent
+          content: newMemoryContent,
+          tags: tagsArray
         })
       })
       
       if (res.ok) {
         await fetchRoom(user.id)
+        await fetchTags()
         setShowModal(false)
         setNewMemoryTitle('')
         setNewMemoryContent('')
+        setNewMemoryTags('')
       }
     } catch (error) {
       console.error('创建记忆失败:', error)
@@ -93,12 +135,18 @@ export default function RoomDetail() {
     setEditMemory(memory)
     setNewMemoryTitle(memory.title)
     setNewMemoryContent(memory.content)
+    setNewMemoryTags(memory.tags?.join(', ') || '')
     setShowModal(true)
   }
 
   const handleUpdateMemory = async (e) => {
     e.preventDefault()
     if (!newMemoryTitle.trim() || !editMemory || !user) return
+
+    const tagsArray = newMemoryTags
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0)
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
@@ -109,16 +157,19 @@ export default function RoomDetail() {
           roomId: roomId,
           memoryId: editMemory.id,
           title: newMemoryTitle,
-          content: newMemoryContent
+          content: newMemoryContent,
+          tags: tagsArray
         })
       })
       
       if (res.ok) {
         await fetchRoom(user.id)
+        await fetchTags()
         setShowModal(false)
         setEditMemory(null)
         setNewMemoryTitle('')
         setNewMemoryContent('')
+        setNewMemoryTags('')
       }
     } catch (error) {
       console.error('更新记忆失败:', error)
@@ -152,6 +203,7 @@ export default function RoomDetail() {
     setEditMemory(null)
     setNewMemoryTitle('')
     setNewMemoryContent('')
+    setNewMemoryTags('')
   }
 
   const handleLogout = () => {
@@ -234,12 +286,13 @@ export default function RoomDetail() {
               >
                 搜索
               </button>
-              {searchResults && (
+              {(searchResults || selectedTag) && (
                 <button
                   type="button"
                   onClick={() => {
                     setSearchQuery('')
                     setSearchResults(null)
+                    setSelectedTag(null)
                   }}
                   className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30"
                 >
@@ -248,6 +301,28 @@ export default function RoomDetail() {
               )}
             </div>
           </form>
+
+          {/* 标签筛选 */}
+          {allTags.length > 0 && (
+            <div className="mb-6">
+              <div className="text-white/60 text-sm mb-2">🏷️ 标签筛选:</div>
+              <div className="flex flex-wrap gap-2">
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleTagFilter(tag)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                      selectedTag === tag
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-white/10 text-white/80 hover:bg-white/20'
+                    }`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 记忆列表 */}
@@ -261,6 +336,18 @@ export default function RoomDetail() {
                 >
                   <h3 className="text-xl font-bold text-white mb-2">{memory.title}</h3>
                   <p className="text-white/70 whitespace-pre-wrap">{memory.content}</p>
+                  {memory.tags && memory.tags.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {memory.tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-1 bg-purple-500/30 text-purple-200 rounded-full text-xs font-medium"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-white/50 text-sm">
                       {new Date(memory.updated_at || memory.created_at).toLocaleString('zh-CN')}
@@ -310,7 +397,7 @@ export default function RoomDetail() {
                     autoFocus
                   />
                 </div>
-                <div className="mb-6">
+                <div className="mb-4">
                   <label className="block text-white/80 text-sm mb-2">内容</label>
                   <textarea
                     value={newMemoryContent}
@@ -319,6 +406,17 @@ export default function RoomDetail() {
                     placeholder="详细的记忆内容..."
                     rows="4"
                   />
+                </div>
+                <div className="mb-6">
+                  <label className="block text-white/80 text-sm mb-2">标签（用逗号分隔）</label>
+                  <input
+                    type="text"
+                    value={newMemoryTags}
+                    onChange={(e) => setNewMemoryTags(e.target.value)}
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50"
+                    placeholder="例如：英语，词汇，重要"
+                  />
+                  <p className="text-white/50 text-xs mt-1">多个标签用逗号分隔，例如：英语，词汇，重要</p>
                 </div>
                 <div className="flex gap-3">
                   <button

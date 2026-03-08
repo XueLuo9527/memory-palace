@@ -9,7 +9,11 @@ import {
   createMemory,
   updateMemory,
   deleteMemory,
-  searchMemories
+  searchMemories,
+  getMemoriesByTag,
+  getAllTags,
+  addTagsToMemory,
+  removeTagFromMemory
 } from '../../../lib/db'
 
 export default async function handler(req, res) {
@@ -21,7 +25,19 @@ export default async function handler(req, res) {
   }
   
   if (req.method === 'GET') {
-    const { search, roomId } = req.query
+    const { search, roomId, tag, getTags } = req.query
+    
+    if (getTags === 'true') {
+      // 获取宫殿所有标签
+      const tags = await getAllTags(id)
+      return res.status(200).json(tags)
+    }
+    
+    if (tag) {
+      // 按标签筛选记忆
+      const results = await getMemoriesByTag(id, tag)
+      return res.status(200).json(results)
+    }
     
     if (search) {
       // 搜索记忆
@@ -47,14 +63,14 @@ export default async function handler(req, res) {
   }
   
   if (req.method === 'POST') {
-    const { roomId, title, content, name, description } = req.body
+    const { roomId, title, content, name, description, tags } = req.body
     
     if (roomId) {
       // 在房间中创建记忆
       if (!title) {
         return res.status(400).json({ error: '记忆标题不能为空' })
       }
-      const memory = await createMemory(roomId, title, content || '')
+      const memory = await createMemory(roomId, title, content || '', tags || [])
       if (!memory) {
         return res.status(500).json({ error: '创建记忆失败' })
       }
@@ -73,11 +89,33 @@ export default async function handler(req, res) {
   }
   
   if (req.method === 'PUT') {
-    const { roomId, memoryId, title, content } = req.body
+    const { roomId, memoryId, title, content, tags, addTag, removeTag } = req.body
     
     if (memoryId && roomId) {
-      // 更新记忆
-      const memory = await updateMemory(memoryId, { title, content })
+      if (addTag) {
+        // 添加标签
+        const memory = await addTagsToMemory(memoryId, [addTag])
+        if (!memory) {
+          return res.status(500).json({ error: '添加标签失败' })
+        }
+        return res.status(200).json(memory)
+      }
+      
+      if (removeTag) {
+        // 移除标签
+        const memory = await removeTagFromMemory(memoryId, removeTag)
+        if (!memory) {
+          return res.status(500).json({ error: '移除标签失败' })
+        }
+        return res.status(200).json(memory)
+      }
+      
+      // 更新记忆（包括标签）
+      const memory = await updateMemory(memoryId, { 
+        title, 
+        content,
+        tags: tags || undefined
+      })
       if (!memory) {
         return res.status(500).json({ error: '更新记忆失败' })
       }
