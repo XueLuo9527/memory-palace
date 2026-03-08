@@ -3,6 +3,9 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 
+// 临时用户 ID（后续接入认证系统）
+const USER_ID = 'demo-user-id'
+
 export default function RoomDetail() {
   const router = useRouter()
   const { id, roomId } = router.query
@@ -23,7 +26,7 @@ export default function RoomDetail() {
 
   const fetchRoom = async () => {
     try {
-      const res = await fetch(`/api/palaces/${id}?roomId=${roomId}`)
+      const res = await fetch(`/api/palaces/${id}?userId=${USER_ID}&roomId=${roomId}`)
       const data = await res.json()
       if (data.error) {
         setRoom(null)
@@ -45,7 +48,7 @@ export default function RoomDetail() {
     }
 
     try {
-      const res = await fetch(`/api/palaces/${id}?search=${encodeURIComponent(searchQuery)}`)
+      const res = await fetch(`/api/palaces/${id}?userId=${USER_ID}&search=${encodeURIComponent(searchQuery)}`)
       const data = await res.json()
       setSearchResults(data)
     } catch (error) {
@@ -62,7 +65,8 @@ export default function RoomDetail() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomId: parseInt(roomId),
+          userId: USER_ID,
+          roomId: roomId,
           title: newMemoryTitle,
           content: newMemoryContent
         })
@@ -95,7 +99,8 @@ export default function RoomDetail() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomId: parseInt(roomId),
+          userId: USER_ID,
+          roomId: roomId,
           memoryId: editMemory.id,
           title: newMemoryTitle,
           content: newMemoryContent
@@ -122,7 +127,8 @@ export default function RoomDetail() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomId: parseInt(roomId),
+          userId: USER_ID,
+          roomId: roomId,
           memoryId
         })
       })
@@ -232,7 +238,7 @@ export default function RoomDetail() {
                   <p className="text-white/70 whitespace-pre-wrap">{memory.content}</p>
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-white/50 text-sm">
-                      {new Date(memory.updatedAt || memory.createdAt).toLocaleString('zh-CN')}
+                      {new Date(memory.updated_at || memory.created_at).toLocaleString('zh-CN')}
                     </span>
                     <div className="flex gap-3">
                       <button

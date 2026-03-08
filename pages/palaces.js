@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 
+// 临时用户 ID（后续接入认证系统）
+const USER_ID = 'demo-user-id'
+
 export default function Palaces() {
   const [palaces, setPalaces] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -15,7 +18,7 @@ export default function Palaces() {
 
   const fetchPalaces = async () => {
     try {
-      const res = await fetch('/api/palaces')
+      const res = await fetch(`/api/palaces?userId=${USER_ID}`)
       const data = await res.json()
       setPalaces(data)
       setLoading(false)
@@ -34,6 +37,7 @@ export default function Palaces() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: USER_ID,
           name: newPalaceName,
           description: newPalaceDesc
         })
@@ -57,7 +61,7 @@ export default function Palaces() {
       const res = await fetch('/api/palaces', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
+        body: JSON.stringify({ userId: USER_ID, id })
       })
       
       if (res.ok) {
@@ -113,7 +117,7 @@ export default function Palaces() {
                     <p className="text-white/70 text-sm mb-4">{palace.description || '暂无描述'}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-white/50 text-sm">
-                        {palace.rooms.length} 个房间
+                        {palace.rooms?.length || 0} 个房间
                       </span>
                       <button
                         onClick={(e) => {

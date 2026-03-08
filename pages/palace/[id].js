@@ -3,6 +3,9 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 
+// 临时用户 ID（后续接入认证系统）
+const USER_ID = 'demo-user-id'
+
 export default function PalaceDetail() {
   const router = useRouter()
   const { id } = router.query
@@ -20,7 +23,7 @@ export default function PalaceDetail() {
 
   const fetchPalace = async () => {
     try {
-      const res = await fetch(`/api/palaces/${id}`)
+      const res = await fetch(`/api/palaces/${id}?userId=${USER_ID}`)
       const data = await res.json()
       setPalace(data)
       setLoading(false)
@@ -39,6 +42,7 @@ export default function PalaceDetail() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: USER_ID,
           name: newRoomName,
           description: newRoomDesc
         })
@@ -62,7 +66,7 @@ export default function PalaceDetail() {
       const res = await fetch(`/api/palaces/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId })
+        body: JSON.stringify({ userId: USER_ID, roomId })
       })
       
       if (res.ok) {
@@ -118,14 +122,14 @@ export default function PalaceDetail() {
 
         {/* 房间列表 */}
         <div className="max-w-6xl mx-auto">
-          {palace.rooms.length === 0 ? (
+          {palace.rooms?.length === 0 ? (
             <div className="text-white/80 text-center py-20">
               <p className="text-2xl mb-4">🚪 还没有房间</p>
               <p>点击"新建房间"开始添加你的第一个记忆空间吧！</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {palace.rooms.map((room) => (
+              {palace.rooms?.map((room) => (
                 <div
                   key={room.id}
                   className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all"
