@@ -1,18 +1,28 @@
 {
-  "name": "memory-palace-code",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "memory-palace",
+  "version": "0.2.0",
+  "description": "Memory Palace - 你的可视化知识管理系统",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": [
+    "memory",
+    "palace",
+    "knowledge",
+    "management"
+  ],
+  "author": "XueLuo9527",
+  "license": "MIT",
   "dependencies": {
-    "next": "^16.1.6",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "next": "^15.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.1"
   }
 }

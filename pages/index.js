@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import styles from '../styles/Home.module.css'
 
 export default function Home() {
@@ -37,7 +38,12 @@ export default function Home() {
         </div>
 
         <div className={styles.cta}>
-          <p>🚀 开发中，敬请期待...</p>
+          <Link href="/palaces">
+            <button className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-lg">
+              🚀 进入我的宫殿
+            </button>
+          </Link>
+          <p className="text-white/60 text-sm mt-4">v0.2.0 - 宫殿 & 房间管理</p>
         </div>
       </main>
 
