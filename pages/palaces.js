@@ -3,6 +3,9 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 import { getCurrentUser, logout } from '../lib/auth'
+import Toast from '../components/Toast'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { SkeletonList } from '../components/Skeleton'
 
 export default function Palaces() {
   const router = useRouter()
@@ -12,6 +15,20 @@ export default function Palaces() {
   const [newPalaceName, setNewPalaceName] = useState('')
   const [newPalaceDesc, setNewPalaceDesc] = useState('')
   const [loading, setLoading] = useState(true)
+  
+  // Toast 和确认框状态
+  const [toast, setToast] = useState({ message: '', type: 'info', visible: false })
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    onConfirm: null
+  })
+  
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type, visible: true })
+  }
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -55,28 +72,44 @@ export default function Palaces() {
         setShowModal(false)
         setNewPalaceName('')
         setNewPalaceDesc('')
+        showToast('🎉 宫殿创建成功！', 'success')
+      } else {
+        showToast('创建失败，请重试', 'error')
       }
     } catch (error) {
       console.error('创建宫殿失败:', error)
+      showToast('创建失败：' + error.message, 'error')
     }
   }
 
-  const handleDeletePalace = async (id) => {
-    if (!confirm('确定要删除这座宫殿吗？') || !user) return
-
-    try {
-      const res = await fetch('/api/palaces', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, id })
-      })
-      
-      if (res.ok) {
-        await fetchPalaces(user.id)
+  const handleDeletePalace = (id) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: '🗑️ 删除宫殿',
+      message: '确定要删除这座宫殿吗？删除后无法恢复，所有房间和记忆也会被删除。',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const res = await fetch('/api/palaces', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, id })
+          })
+          
+          if (res.ok) {
+            await fetchPalaces(user.id)
+            showToast('宫殿已删除', 'success')
+          } else {
+            showToast('删除失败', 'error')
+          }
+        } catch (error) {
+          console.error('删除宫殿失败:', error)
+          showToast('删除失败：' + error.message, 'error')
+        } finally {
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }))
+        }
       }
-    } catch (error) {
-      console.error('删除宫殿失败:', error)
-    }
+    })
   }
 
   const handleLogout = () => {
@@ -130,18 +163,22 @@ export default function Palaces() {
         {/* 宫殿列表 */}
         <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="text-white/80 text-center py-20">加载中...</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <SkeletonList count={3} />
+            </div>
           ) : palaces.length === 0 ? (
-            <div className="text-white/80 text-center py-20 px-4">
-              <p className="text-xl sm:text-2xl mb-4">🌟 还没有宫殿</p>
-              <p className="text-sm sm:text-base">点击"新建宫殿"开始创建你的第一座记忆宫殿吧！</p>
+            <div className="text-white/80 text-center py-20 px-4 animate-fade-in">
+              <p className="text-4xl mb-4">🌟</p>
+              <p className="text-xl sm:text-2xl mb-2">还没有宫殿</p>
+              <p className="text-sm sm:text-base text-white/60">点击"新建宫殿"开始创建你的第一座记忆宫殿吧！</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {palaces.map((palace) => (
+              {palaces.map((palace, index) => (
                 <div
                   key={palace.id}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 hover:bg-white/15 transition-all"
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 hover:bg-white/15 transition-all hover-card-lift animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <Link href={`/palace/${palace.id}`}>
                     <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{palace.name}</h3>
@@ -214,6 +251,25 @@ export default function Palaces() {
             </div>
           </div>
         )}
+
+        {/* Toast 提示 */}
+        {toast.visible && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, visible: false })}
+          />
+        )}
+
+        {/* 确认对话框 */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          type={confirmDialog.type}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        />
       </div>
     </>
   )
