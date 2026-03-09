@@ -6,6 +6,7 @@ import { getCurrentUser, logout } from '../lib/auth'
 import Toast from '../components/Toast'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { SkeletonList } from '../components/Skeleton'
+import ParticleBackground from '../components/ParticleBackground'
 
 export default function Palaces() {
   const router = useRouter()
@@ -125,9 +126,12 @@ export default function Palaces() {
         <meta name="description" content="管理你的记忆宫殿" />
       </Head>
 
-      <div className="min-h-screen p-4 sm:p-8">
+      <div className="min-h-screen p-4 sm:p-8 relative">
+        {/* 3D 粒子背景 */}
+        <ParticleBackground count={30} />
+        
         {/* 头部 */}
-        <div className="max-w-6xl mx-auto mb-8">
+        <div className="max-w-6xl mx-auto mb-8 relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <div className="flex items-center gap-4">
               <Link href="/" className="text-white/80 hover:text-white text-sm sm:text-base">
@@ -150,10 +154,10 @@ export default function Palaces() {
             )}
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h1 className="text-2xl sm:text-4xl font-bold text-white">🏰 我的宫殿</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold text-white text-3d neon-text">🏰 我的宫殿</h1>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base w-full sm:w-auto"
+              className="bg-white/20 hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base w-full sm:w-auto btn-click depth-shadow-2 hover:depth-shadow-3"
             >
               + 新建宫殿
             </button>
@@ -161,24 +165,24 @@ export default function Palaces() {
         </div>
 
         {/* 宫殿列表 */}
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto relative z-10">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <SkeletonList count={3} />
             </div>
           ) : palaces.length === 0 ? (
-            <div className="text-white/80 text-center py-20 px-4 animate-fade-in">
-              <p className="text-4xl mb-4">🌟</p>
-              <p className="text-xl sm:text-2xl mb-2">还没有宫殿</p>
+            <div className="text-white/80 text-center py-20 px-4 animate-emerge">
+              <p className="text-5xl mb-6 animate-float-3d">🏰</p>
+              <p className="text-2xl sm:text-3xl mb-3 font-bold text-3d">还没有宫殿</p>
               <p className="text-sm sm:text-base text-white/60">点击"新建宫殿"开始创建你的第一座记忆宫殿吧！</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 perspective-1000">
               {palaces.map((palace, index) => (
                 <div
                   key={palace.id}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 hover:bg-white/15 transition-all hover-card-lift animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="card-3d bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 depth-shadow-2 animate-emerge"
+                  style={{ animationDelay: `${index * 80}ms` }}
                 >
                   <Link href={`/palace/${palace.id}`}>
                     <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{palace.name}</h3>

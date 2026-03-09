@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 import { getCurrentUser, logout } from '../../../lib/auth'
+import ParticleBackground from '../../../../components/ParticleBackground'
 
 export default function RoomDetail() {
   const router = useRouter()
@@ -237,9 +238,12 @@ export default function RoomDetail() {
         <meta name="description" content={room.description} />
       </Head>
 
-      <div className="min-h-screen p-4 sm:p-8">
+      <div className="min-h-screen p-4 sm:p-8 relative">
+        {/* 3D 粒子背景 */}
+        <ParticleBackground count={25} />
+        
         {/* 头部 */}
-        <div className="max-w-6xl mx-auto mb-8">
+        <div className="max-w-6xl mx-auto mb-8 relative z-10">
           <div className="flex justify-between items-center mb-4">
             <Link href={`/palace/${id}`} className="text-white/80 hover:text-white text-sm sm:text-base">
               ← 返回宫殿
@@ -259,12 +263,12 @@ export default function RoomDetail() {
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">🚪 {room.name}</h1>
+              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 text-3d neon-text">🚪 {room.name}</h1>
               <p className="text-white/70 text-sm sm:text-base">{room.description}</p>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base w-full sm:w-auto"
+              className="bg-white/20 hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base w-full sm:w-auto btn-click depth-shadow-2 hover:depth-shadow-3"
             >
               + 添加记忆
             </button>
@@ -333,9 +337,9 @@ export default function RoomDetail() {
               {displayMemories.map((memory) => (
                 <div
                   key={memory.id}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 hover:bg-white/15 transition-all"
+                  className="card-3d bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 depth-shadow-2 mb-4"
                 >
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{memory.title}</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2 text-3d">{memory.title}</h3>
                   <p className="text-white/70 text-sm sm:text-base whitespace-pre-wrap">{memory.content}</p>
                   {memory.tags && memory.tags.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">

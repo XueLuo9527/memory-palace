@@ -214,3 +214,220 @@ body {
 .modal-backdrop {
   backdrop-filter: blur(4px);
 }
+
+/* ===== 3D 效果 ===== */
+
+/* 3D 透视容器 */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-500 {
+  perspective: 500px;
+}
+
+/* 3D 变换基础 */
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* 3D 卡片悬停效果 */
+.card-3d {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.4s ease;
+  transform: translateZ(0);
+}
+
+.card-3d:hover {
+  transform: translateZ(20px) rotateX(5deg) rotateY(-5deg);
+  box-shadow: 
+    -20px 20px 60px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(138, 43, 226, 0.2);
+}
+
+/* 3D 悬浮动画 */
+@keyframes float-3d {
+  0%, 100% {
+    transform: translateY(0) rotateX(0);
+  }
+  50% {
+    transform: translateY(-10px) rotateX(3deg);
+  }
+}
+
+.animate-float-3d {
+  animation: float-3d 4s ease-in-out infinite;
+}
+
+/* 视差滚动 */
+.parallax {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.parallax-layer {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.parallax-layer--back {
+  transform: translateZ(-50px) scale(1.5);
+}
+
+.parallax-layer--front {
+  transform: translateZ(0);
+}
+
+/* 3D 深度阴影 */
+.depth-shadow-1 {
+  box-shadow: 
+    0 1px 2px rgba(0,0,0,0.1),
+    0 2px 4px rgba(0,0,0,0.1),
+    0 4px 8px rgba(0,0,0,0.1);
+}
+
+.depth-shadow-2 {
+  box-shadow: 
+    0 2px 4px rgba(0,0,0,0.1),
+    0 4px 8px rgba(0,0,0,0.1),
+    0 8px 16px rgba(0,0,0,0.1),
+    0 0 40px rgba(138, 43, 226, 0.1);
+}
+
+.depth-shadow-3 {
+  box-shadow: 
+    0 4px 8px rgba(0,0,0,0.15),
+    0 8px 16px rgba(0,0,0,0.15),
+    0 16px 32px rgba(0,0,0,0.15),
+    0 0 60px rgba(138, 43, 226, 0.2);
+}
+
+/* 粒子背景动画 */
+@keyframes particle-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100px, -200px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+  animation: particle-float 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* 3D 空间网格背景 */
+.grid-3d {
+  background-image: 
+    linear-gradient(rgba(138, 43, 226, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(138, 43, 226, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+  transform: perspective(500px) rotateX(60deg);
+  transform-origin: center top;
+  opacity: 0.3;
+}
+
+/* 光晕效果 */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(138, 43, 226, 0.3),
+      0 0 40px rgba(138, 43, 226, 0.2),
+      0 0 60px rgba(138, 43, 226, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 40px rgba(138, 43, 226, 0.5),
+      0 0 80px rgba(138, 43, 226, 0.3),
+      0 0 120px rgba(138, 43, 226, 0.2);
+  }
+}
+
+.animate-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* 3D 文字效果 */
+.text-3d {
+  text-shadow: 
+    0 1px 2px rgba(0,0,0,0.3),
+    0 2px 4px rgba(0,0,0,0.2),
+    0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 霓虹效果 */
+@keyframes neon-flicker {
+  0%, 100% {
+    text-shadow: 
+      0 0 10px rgba(138, 43, 226, 0.8),
+      0 0 20px rgba(138, 43, 226, 0.6),
+      0 0 40px rgba(138, 43, 226, 0.4);
+  }
+  50% {
+    text-shadow: 
+      0 0 15px rgba(138, 43, 226, 1),
+      0 0 30px rgba(138, 43, 226, 0.8),
+      0 0 60px rgba(138, 43, 226, 0.6);
+  }
+}
+
+.neon-text {
+  animation: neon-flicker 2s ease-in-out infinite;
+}
+
+/* 进入动画 - 从深处浮现 */
+@keyframes emerge-from-depth {
+  from {
+    opacity: 0;
+    transform: translateZ(-500px) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+  }
+}
+
+.animate-emerge {
+  animation: emerge-from-depth 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 星空背景 */
+.stars {
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 50px 160px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.5), transparent);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: stars-twinkle 5s ease-in-out infinite;
+}
+
+@keyframes stars-twinkle {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
