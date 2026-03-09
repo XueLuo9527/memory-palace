@@ -237,19 +237,19 @@ export default function RoomDetail() {
         <meta name="description" content={room.description} />
       </Head>
 
-      <div className="min-h-screen p-8">
+      <div className="min-h-screen p-4 sm:p-8">
         {/* 头部 */}
         <div className="max-w-6xl mx-auto mb-8">
           <div className="flex justify-between items-center mb-4">
-            <Link href={`/palace/${id}`} className="text-white/80 hover:text-white">
+            <Link href={`/palace/${id}`} className="text-white/80 hover:text-white text-sm sm:text-base">
               ← 返回宫殿
             </Link>
             {user && (
               <div className="flex items-center gap-4">
-                <span className="text-white/80">👤 {user.name}</span>
+                <span className="text-white/80 text-xs sm:text-sm">👤 {user.name}</span>
                 <button
                   onClick={handleLogout}
-                  className="text-white/60 hover:text-white text-sm transition-colors"
+                  className="text-white/60 hover:text-white text-xs sm:text-sm transition-colors"
                 >
                   退出
                 </button>
@@ -257,14 +257,14 @@ export default function RoomDetail() {
             )}
           </div>
           
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">🚪 {room.name}</h1>
-              <p className="text-white/70">{room.description}</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">🚪 {room.name}</h1>
+              <p className="text-white/70 text-sm sm:text-base">{room.description}</p>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30"
+              className="bg-white/20 hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base w-full sm:w-auto"
             >
               + 添加记忆
             </button>
@@ -272,21 +272,22 @@ export default function RoomDetail() {
 
           {/* 搜索框 */}
           <form onSubmit={handleSearch} className="mb-6">
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50"
+                className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 text-sm sm:text-base"
                 placeholder="🔍 搜索记忆..."
               />
-              <button
-                type="submit"
-                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30"
-              >
-                搜索
-              </button>
-              {(searchResults || selectedTag) && (
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base flex-1 sm:flex-none"
+                >
+                  搜索
+                </button>
+                {(searchResults || selectedTag) && (
                 <button
                   type="button"
                   onClick={() => {
@@ -305,13 +306,13 @@ export default function RoomDetail() {
           {/* 标签筛选 */}
           {allTags.length > 0 && (
             <div className="mb-6">
-              <div className="text-white/60 text-sm mb-2">🏷️ 标签筛选:</div>
+              <div className="text-white/60 text-xs sm:text-sm mb-2">🏷️ 标签筛选:</div>
               <div className="flex flex-wrap gap-2">
                 {allTags.map((tag) => (
                   <button
                     key={tag}
                     onClick={() => handleTagFilter(tag)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
                       selectedTag === tag
                         ? 'bg-purple-500 text-white'
                         : 'bg-white/10 text-white/80 hover:bg-white/20'
@@ -332,10 +333,10 @@ export default function RoomDetail() {
               {displayMemories.map((memory) => (
                 <div
                   key={memory.id}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all"
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 hover:bg-white/15 transition-all"
                 >
-                  <h3 className="text-xl font-bold text-white mb-2">{memory.title}</h3>
-                  <p className="text-white/70 whitespace-pre-wrap">{memory.content}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{memory.title}</h3>
+                  <p className="text-white/70 text-sm sm:text-base whitespace-pre-wrap">{memory.content}</p>
                   {memory.tags && memory.tags.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {memory.tags.map((tag, idx) => (
@@ -348,20 +349,20 @@ export default function RoomDetail() {
                       ))}
                     </div>
                   )}
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-white/50 text-sm">
+                  <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+                    <span className="text-white/50 text-xs sm:text-sm">
                       {new Date(memory.updated_at || memory.created_at).toLocaleString('zh-CN')}
                     </span>
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleEditMemory(memory)}
-                        className="text-white/50 hover:text-white text-sm transition-colors"
+                        className="text-white/50 hover:text-white text-xs sm:text-sm transition-colors"
                       >
                         编辑
                       </button>
                       <button
                         onClick={() => handleDeleteMemory(memory.id)}
-                        className="text-white/50 hover:text-red-300 text-sm transition-colors"
+                        className="text-white/50 hover:text-red-300 text-xs sm:text-sm transition-colors"
                       >
                         删除
                       </button>
@@ -380,55 +381,55 @@ export default function RoomDetail() {
 
         {/* 添加/编辑记忆模态框 */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-gradient-to-br from-purple-900/90 to-indigo-900/90 rounded-xl p-8 max-w-md w-full border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-6">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-gradient-to-br from-purple-900/90 to-indigo-900/90 rounded-xl p-4 sm:p-8 max-w-md w-full border border-white/20 my-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-6">
                 {editMemory ? '✏️ 编辑记忆' : '💭 添加记忆'}
               </h2>
               <form onSubmit={editMemory ? handleUpdateMemory : handleCreateMemory}>
                 <div className="mb-4">
-                  <label className="block text-white/80 text-sm mb-2">标题 *</label>
+                  <label className="block text-white/80 text-xs sm:text-sm mb-2">标题 *</label>
                   <input
                     type="text"
                     value={newMemoryTitle}
                     onChange={(e) => setNewMemoryTitle(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50"
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 text-sm sm:text-base"
                     placeholder="例如：apple - 苹果"
                     autoFocus
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-white/80 text-sm mb-2">内容</label>
+                  <label className="block text-white/80 text-xs sm:text-sm mb-2">内容</label>
                   <textarea
                     value={newMemoryContent}
                     onChange={(e) => setNewMemoryContent(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 resize-none"
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 resize-none text-sm sm:text-base"
                     placeholder="详细的记忆内容..."
                     rows="4"
                   />
                 </div>
                 <div className="mb-6">
-                  <label className="block text-white/80 text-sm mb-2">标签（用逗号分隔）</label>
+                  <label className="block text-white/80 text-xs sm:text-sm mb-2">标签（用逗号分隔）</label>
                   <input
                     type="text"
                     value={newMemoryTags}
                     onChange={(e) => setNewMemoryTags(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50"
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 text-sm sm:text-base"
                     placeholder="例如：英语，词汇，重要"
                   />
                   <p className="text-white/50 text-xs mt-1">多个标签用逗号分隔，例如：英语，词汇，重要</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg font-medium transition-all"
+                    className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg font-medium transition-all text-sm sm:text-base"
                   >
                     取消
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-lg font-medium transition-all"
+                    className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-lg font-medium transition-all text-sm sm:text-base"
                   >
                     {editMemory ? '更新' : '保存'}
                   </button>

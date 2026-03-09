@@ -16,3 +16,55 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
 }
+
+/* 移动端适配优化 */
+@media (max-width: 640px) {
+  /* 优化触摸目标大小 */
+  button, 
+  input, 
+  select, 
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 优化字体大小 */
+  h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  /* 优化间距 */
+  .p-8 {
+    padding: 1rem !important;
+  }
+
+  /* 优化网格布局 */
+  .grid-cols-1,
+  .grid-cols-2,
+  .grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+}
+
+/* 防止水平滚动 */
+body {
+  position: fixed;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* 优化移动端滚动 */
+@media (max-width: 640px) {
+  .min-h-screen {
+    min-height: 100dvh; /* 动态视口高度 */
+  }
+}
