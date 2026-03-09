@@ -96,9 +96,14 @@ export default function Palaces() {
         {/* 头部 */}
         <div className="max-w-6xl mx-auto mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-            <Link href="/" className="text-white/80 hover:text-white text-sm sm:text-base">
-              ← 返回首页
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/" className="text-white/80 hover:text-white text-sm sm:text-base">
+                ← 返回首页
+              </Link>
+              <Link href="/settings" className="text-white/80 hover:text-white text-sm sm:text-base">
+                ⚙️ 设置
+              </Link>
+            </div>
             {user && (
               <div className="flex items-center gap-4">
                 <span className="text-white/80 text-sm sm:text-base">👤 {user.name}</span>
