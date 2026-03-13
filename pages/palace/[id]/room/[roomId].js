@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import { getCurrentUser, logout } from '../../../lib/auth'
+import { getCurrentUser, logout } from '../../../../lib/auth'
 import BookShelf, { BookDetailModal } from '../../../../components/BookShelf'
 
 export default function RoomDetail() {

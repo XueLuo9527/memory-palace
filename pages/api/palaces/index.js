@@ -1,4 +1,4 @@
-import { getPalaces, createPalace, deletePalace } from '../../lib/db'
+import { getPalaces, createPalace, deletePalace } from '@/lib/db-local'
 
 export default async function handler(req, res) {
   // 获取用户 ID（暂时从 query 参数获取，后续接入认证）
