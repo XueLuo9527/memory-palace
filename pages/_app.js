@@ -1,6 +1,7 @@
-import { useEffect, useState, createContext, useContext } from 'react'
+import { useEffect, useState, createContext } from 'react'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
+import { getCurrentUser, logout as authLogout } from '../lib/auth'
 
 // 用户上下文
 export const UserContext = createContext(null)
@@ -39,104 +40,50 @@ function UserProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
-  // 检查认证状态
-  async function checkAuth() {
+  // 检查认证状态（localStorage 模式）
+  function checkAuth() {
     try {
       const storedUser = localStorage.getItem('memory-palace-user')
-      const storedSession = localStorage.getItem('memory-palace-session')
       
-      if (storedUser && storedSession) {
-        const session = JSON.parse(storedSession)
-        
-        // 检查会话是否过期
-        if (session.expiresAt && session.expiresAt * 1000 < Date.now()) {
-          // 会话过期，尝试刷新
-          const refreshed = await refreshSession()
-          if (refreshed) {
-            setUser(JSON.parse(storedUser))
-          } else {
-            localStorage.removeItem('memory-palace-user')
-            localStorage.removeItem('memory-palace-session')
-          }
-        } else {
-          setUser(JSON.parse(storedUser))
-        }
+      if (storedUser) {
+        setUser(JSON.parse(storedUser))
       }
+      
+      setLoading(false)
     } catch (error) {
       console.error('Auth check error:', error)
-    } finally {
       setLoading(false)
     }
   }
 
-  // 刷新会话
-  async function refreshSession() {
-    try {
-      const storedSession = localStorage.getItem('memory-palace-session')
-      if (!storedSession) return false
-      
-      const session = JSON.parse(storedSession)
-      const res = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: session.refreshToken })
-      })
-      
-      if (!res.ok) return false
-      
-      const result = await res.json()
-      if (result.data?.session) {
-        localStorage.setItem('memory-palace-session', JSON.stringify(result.data.session))
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('Refresh error:', error)
-      return false
-    }
-  }
-
   // 登录
-  async function login(userData, sessionData) {
-    localStorage.setItem('memory-palace-user', JSON.stringify(userData))
-    localStorage.setItem('memory-palace-session', JSON.stringify(sessionData))
-    setUser(userData)
-  }
-
-  // 登出
-  async function logout() {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-    } catch (error) {
-      console.error('Logout error:', error)
+  async function login(name) {
+    const user = {
+      id: 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+      name: name.trim(),
+      createdAt: new Date().toISOString()
     }
     
-    localStorage.removeItem('memory-palace-user')
-    localStorage.removeItem('memory-palace-session')
-    setUser(null)
-    router.push('/login')
+    setUser(user)
+    localStorage.setItem('memory-palace-user', JSON.stringify(user))
+    return user
   }
 
-  // 需要登录时重定向
-  useEffect(() => {
-    if (!loading && !user && !['/login', '/'].includes(router.pathname)) {
-      router.push('/login')
-    }
-  }, [user, loading, router.pathname])
+  // 退出登录
+  function logout() {
+    setUser(null)
+    authLogout()
+    router.push('/login')
+  }
 
   const value = {
     user,
     loading,
     login,
-    logout,
-    isAuthenticated: !!user
+    logout
   }
 
-  return (
-    <UserContext.Provider value={value}>
-      {children}
-    </UserContext.Provider>
-  )
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
 
 export default function App({ Component, pageProps }) {
