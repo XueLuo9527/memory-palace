@@ -66,7 +66,7 @@ export default function PalaceDetail() {
   }
 
   const handleDeleteRoom = async (roomId) => {
-    if (!confirm('确定要删除这个房间吗？') || !user) return
+    if (!confirm('确定要删除这个书架吗？') || !user) return
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
@@ -91,16 +91,16 @@ export default function PalaceDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white/80 text-xl">加载中...</div>
+      <div className="tech-bg min-h-screen flex items-center justify-center">
+        <div className="text-white/60 text-lg">加载中...</div>
       </div>
     )
   }
 
   if (!palace) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white/80 text-xl">宫殿不存在</div>
+      <div className="tech-bg min-h-screen flex items-center justify-center">
+        <div className="text-white/60 text-lg">图书馆不存在</div>
       </div>
     )
   }
@@ -110,106 +110,127 @@ export default function PalaceDetail() {
       <Head>
         <title>{palace.name} - 记忆宫殿</title>
         <meta name="description" content={palace.description} />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
 
-      <div className="min-h-screen p-8">
+      <div className="tech-bg min-h-screen p-4 sm:p-8">
         {/* 头部 */}
-        <div className="max-w-6xl mx-auto mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <Link href="/palaces" className="text-white/80 hover:text-white">
-              ← 返回宫殿列表
-            </Link>
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <Link href="/palaces" className="text-white/60 hover:text-white text-sm transition-colors">
+                ← 返回图书馆列表
+              </Link>
+              <Link href="/settings" className="text-white/60 hover:text-white text-sm transition-colors">
+                ⚙️ 设置
+              </Link>
+            </div>
             {user && (
               <div className="flex items-center gap-4">
-                <span className="text-white/80">👤 {user.name}</span>
+                <div className="ios-card px-4 py-2">
+                  <span className="text-white/80 text-sm">👤 {user.name}</span>
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="text-white/60 hover:text-white text-sm transition-colors"
+                  className="text-white/60 hover:text-white text-sm transition-colors btn-press"
                 >
                   退出
                 </button>
               </div>
             )}
           </div>
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">🏰 {palace.name}</h1>
-              <p className="text-white/70">{palace.description}</p>
+          
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 flex items-center justify-center text-3xl border border-white/10">
+                📚
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-white neon-glow mb-1">
+                  {palace.name}
+                </h1>
+                <p className="text-white/60 text-sm">
+                  {palace.description || '知识图书馆'}
+                </p>
+              </div>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30"
+              className="ios-button flex items-center gap-2 btn-press"
             >
-              + 新建房间
+              <span>+</span>
+              <span>新建书架</span>
             </button>
           </div>
         </div>
 
-        {/* 房间列表 */}
-        <div className="max-w-6xl mx-auto">
+        {/* 书架（房间）列表 */}
+        <div className="max-w-7xl mx-auto">
           {palace.rooms?.length === 0 ? (
-            <div className="text-white/80 text-center py-20">
-              <p className="text-2xl mb-4">🚪 还没有房间</p>
-              <p>点击"新建房间"开始添加你的第一个记忆空间吧！</p>
+            <div className="empty-shelf animate-fade-in-up" onClick={() => setShowModal(true)}>
+              <div className="text-6xl mb-4 animate-float-3d">📚</div>
+              <p className="text-xl font-semibold mb-2">还没有书架</p>
+              <p className="text-white/50 text-sm mb-4">点击创建你的第一个书架</p>
+              <button className="ios-button-secondary px-6 py-3 rounded-xl btn-press">
+                + 创建书架
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {palace.rooms?.map((room) => (
-                <div
-                  key={room.id}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-white">🚪 {room.name}</h3>
-                    <button
-                      onClick={() => handleDeleteRoom(room.id)}
-                      className="text-white/50 hover:text-red-300 text-sm transition-colors"
-                    >
-                      删除
-                    </button>
-                  </div>
-                  <p className="text-white/70 text-sm mb-4">{room.description || '暂无描述'}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/50 text-sm">
-                      {room.memories?.length || 0} 个记忆
-                    </span>
-                    <Link
-                      href={`/palace/${id}/room/${room.id}`}
-                      className="text-white/80 hover:text-white text-sm font-medium transition-colors"
-                    >
-                      进入 →
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <>
+              {/* 书架标签 */}
+              <div className="flex items-center gap-3 mb-6">
+                <span className="tech-dot" />
+                <span className="text-white/60 text-sm uppercase tracking-wider">
+                  {palace.rooms.length} 个书架
+                </span>
+              </div>
+
+              {/* 书架网格 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {palace.rooms.map((room, index) => (
+                  <RoomCard
+                    key={room.id}
+                    room={room}
+                    palaceId={id}
+                    index={index}
+                    onDelete={() => handleDeleteRoom(room.id)}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
         {/* 新建房间模态框 */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-gradient-to-br from-purple-900/90 to-indigo-900/90 rounded-xl p-8 max-w-md w-full border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-6">🚪 新建房间</h2>
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="glass-panel rounded-2xl p-6 sm:p-8 max-w-md w-full animate-scale-in border border-white/10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 flex items-center justify-center text-2xl border border-white/10">
+                  📚
+                </div>
+                <h2 className="text-2xl font-bold text-white">新建书架</h2>
+              </div>
+              
               <form onSubmit={handleCreateRoom}>
-                <div className="mb-4">
-                  <label className="block text-white/80 text-sm mb-2">房间名称 *</label>
+                <div className="mb-5">
+                  <label className="block text-white/70 text-sm mb-2 font-medium">书架名称 *</label>
                   <input
                     type="text"
                     value={newRoomName}
                     onChange={(e) => setNewRoomName(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50"
-                    placeholder="例如：词汇大厅"
+                    className="w-full ios-card bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-cyan-400/50 transition-colors"
+                    placeholder="例如：英语词汇区"
                     autoFocus
                   />
                 </div>
                 <div className="mb-6">
-                  <label className="block text-white/80 text-sm mb-2">描述</label>
+                  <label className="block text-white/70 text-sm mb-2 font-medium">描述</label>
                   <textarea
                     value={newRoomDesc}
                     onChange={(e) => setNewRoomDesc(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 resize-none"
-                    placeholder="这个房间是用来记什么的？"
+                    className="w-full ios-card bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-cyan-400/50 transition-colors resize-none"
+                    placeholder="这个书架用来收藏什么类型的书籍？"
                     rows="3"
                   />
                 </div>
@@ -217,13 +238,13 @@ export default function PalaceDetail() {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg font-medium transition-all"
+                    className="flex-1 ios-button-secondary py-3 rounded-xl font-medium btn-press"
                   >
                     取消
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-lg font-medium transition-all"
+                    className="flex-1 ios-button py-3 rounded-xl font-medium btn-press"
                   >
                     创建
                   </button>
@@ -234,5 +255,65 @@ export default function PalaceDetail() {
         )}
       </div>
     </>
+  )
+}
+
+function RoomCard({ room, palaceId, index, onDelete }) {
+  return (
+    <Link href={`/palace/${palaceId}/room/${room.id}`}>
+      <div 
+        className="library-shelf group animate-fade-in-up cursor-pointer"
+        style={{ animationDelay: `${index * 80}ms` }}
+      >
+        {/* 书架顶部装饰 */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent rounded-t-2xl" />
+        
+        {/* 书架图标 */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 flex items-center justify-center text-2xl border border-white/10 group-hover:scale-110 transition-transform duration-300">
+            📖
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors truncate">
+              {room.name}
+            </h3>
+            <p className="text-white/50 text-sm truncate">
+              {room.description || '暂无描述'}
+            </p>
+          </div>
+        </div>
+
+        {/* 分隔线 */}
+        <div className="tech-line my-4" />
+
+        {/* 书架信息 */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className="tech-dot" />
+            <span className="text-white/60 text-sm">
+              {room.memories?.length || 0} 本书
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-white/60 text-sm group-hover:text-cyan-400 transition-colors">
+              进入 →
+            </span>
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="text-white/40 hover:text-red-400 text-sm transition-colors btn-press"
+            >
+              删除
+            </button>
+          </div>
+        </div>
+
+        {/* 悬停光晕 */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400/0 via-purple-400/5 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      </div>
+    </Link>
   )
 }

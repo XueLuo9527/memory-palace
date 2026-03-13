@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 import { getCurrentUser, logout } from '../../../lib/auth'
-import ParticleBackground from '../../../../components/ParticleBackground'
+import BookShelf, { BookDetailModal } from '../../../../components/BookShelf'
 
 export default function RoomDetail() {
   const router = useRouter()
@@ -20,6 +20,11 @@ export default function RoomDetail() {
   const [selectedTag, setSelectedTag] = useState(null)
   const [allTags, setAllTags] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // 书籍详情模态框
+  const [selectedBook, setSelectedBook] = useState(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState(null)
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -138,6 +143,7 @@ export default function RoomDetail() {
     setNewMemoryContent(memory.content)
     setNewMemoryTags(memory.tags?.join(', ') || '')
     setShowModal(true)
+    setSelectedBook(null)
   }
 
   const handleUpdateMemory = async (e) => {
@@ -177,8 +183,14 @@ export default function RoomDetail() {
     }
   }
 
-  const handleDeleteMemory = async (memoryId) => {
-    if (!confirm('确定要删除这条记忆吗？') || !user) return
+  const confirmDelete = (memoryId) => {
+    setPendingDelete(memoryId)
+    setShowConfirmDialog(true)
+    setSelectedBook(null)
+  }
+
+  const handleDeleteMemory = async () => {
+    if (!pendingDelete || !user) return
 
     try {
       const res = await fetch(`/api/palaces/${id}`, {
@@ -187,12 +199,14 @@ export default function RoomDetail() {
         body: JSON.stringify({
           userId: user.id,
           roomId: roomId,
-          memoryId
+          memoryId: pendingDelete
         })
       })
       
       if (res.ok) {
         await fetchRoom(user.id)
+        setShowConfirmDialog(false)
+        setPendingDelete(null)
       }
     } catch (error) {
       console.error('删除记忆失败:', error)
@@ -215,45 +229,50 @@ export default function RoomDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white/80 text-xl">加载中...</div>
+      <div className="tech-bg min-h-screen flex items-center justify-center">
+        <div className="text-white/60 text-lg">加载中...</div>
       </div>
     )
   }
 
   if (!room) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white/80 text-xl">房间不存在</div>
+      <div className="tech-bg min-h-screen flex items-center justify-center">
+        <div className="text-white/60 text-lg">书架不存在</div>
       </div>
     )
   }
 
-  const displayMemories = searchResults || room.memories
+  const displayMemories = searchResults || room.memories || []
 
   return (
     <>
       <Head>
         <title>{room.name} - 记忆宫殿</title>
         <meta name="description" content={room.description} />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
 
-      <div className="min-h-screen p-4 sm:p-8 relative">
-        {/* 3D 粒子背景 */}
-        <ParticleBackground count={25} />
-        
+      <div className="tech-bg min-h-screen p-4 sm:p-8 relative overflow-x-hidden">
         {/* 头部 */}
-        <div className="max-w-6xl mx-auto mb-8 relative z-10">
-          <div className="flex justify-between items-center mb-4">
-            <Link href={`/palace/${id}`} className="text-white/80 hover:text-white text-sm sm:text-base">
-              ← 返回宫殿
-            </Link>
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <Link href={`/palace/${id}`} className="text-white/60 hover:text-white text-sm transition-colors">
+                ← 返回图书馆
+              </Link>
+              <Link href="/settings" className="text-white/60 hover:text-white text-sm transition-colors">
+                ⚙️ 设置
+              </Link>
+            </div>
             {user && (
               <div className="flex items-center gap-4">
-                <span className="text-white/80 text-xs sm:text-sm">👤 {user.name}</span>
+                <div className="ios-card px-4 py-2">
+                  <span className="text-white/80 text-sm">👤 {user.name}</span>
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="text-white/60 hover:text-white text-xs sm:text-sm transition-colors"
+                  className="text-white/60 hover:text-white text-sm transition-colors btn-press"
                 >
                   退出
                 </button>
@@ -262,183 +281,209 @@ export default function RoomDetail() {
           </div>
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 text-3d neon-text">🚪 {room.name}</h1>
-              <p className="text-white/70 text-sm sm:text-base">{room.description}</p>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 flex items-center justify-center text-3xl border border-white/10">
+                📖
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-white neon-glow mb-1">
+                  {room.name}
+                </h1>
+                <p className="text-white/60 text-sm">
+                  {room.description || '知识书架'}
+                </p>
+              </div>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base w-full sm:w-auto btn-click depth-shadow-2 hover:depth-shadow-3"
+              className="ios-button flex items-center gap-2 btn-press"
             >
-              + 添加记忆
+              <span>+</span>
+              <span>添加书籍</span>
             </button>
           </div>
 
-          {/* 搜索框 */}
-          <form onSubmit={handleSearch} className="mb-6">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 text-sm sm:text-base"
-                placeholder="🔍 搜索记忆..."
-              />
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-sm sm:text-base flex-1 sm:flex-none"
-                >
-                  搜索
-                </button>
-                {(searchResults || selectedTag) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('')
-                    setSearchResults(null)
-                    setSelectedTag(null)
-                  }}
-                  className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30"
-                >
-                  清除
-                </button>
-              )}
-            </div>
-          </form>
-
-          {/* 标签筛选 */}
-          {allTags.length > 0 && (
-            <div className="mb-6">
-              <div className="text-white/60 text-xs sm:text-sm mb-2">🏷️ 标签筛选:</div>
-              <div className="flex flex-wrap gap-2">
-                {allTags.map((tag) => (
+          {/* 搜索和筛选 */}
+          <div className="ios-card p-4 mb-6">
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 ios-card bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-cyan-400/50 transition-colors"
+                  placeholder="🔍 搜索书籍..."
+                />
+                <div className="flex gap-3">
                   <button
-                    key={tag}
-                    onClick={() => handleTagFilter(tag)}
-                    className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                      selectedTag === tag
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-white/10 text-white/80 hover:bg-white/20'
-                    }`}
+                    type="submit"
+                    className="ios-button px-6 py-3 btn-press"
                   >
-                    #{tag}
+                    搜索
                   </button>
-                ))}
+                  {(searchResults || selectedTag) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('')
+                        setSearchResults(null)
+                        setSelectedTag(null)
+                      }}
+                      className="ios-button-secondary px-6 py-3 rounded-xl btn-press"
+                    >
+                      清除
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            </form>
+
+            {/* 标签筛选 */}
+            {allTags.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="tech-dot" />
+                  <span className="text-white/60 text-sm">标签筛选</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => handleTagFilter(tag)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all btn-press ${
+                        selectedTag === tag
+                          ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white'
+                          : 'ios-card text-white/70 hover:text-white'
+                      }`}
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* 记忆列表 */}
-        <div className="max-w-6xl mx-auto">
-          {displayMemories && displayMemories.length > 0 ? (
-            <div className="space-y-4">
-              {displayMemories.map((memory) => (
-                <div
-                  key={memory.id}
-                  className="card-3d bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 depth-shadow-2 mb-4"
-                >
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2 text-3d">{memory.title}</h3>
-                  <p className="text-white/70 text-sm sm:text-base whitespace-pre-wrap">{memory.content}</p>
-                  {memory.tags && memory.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {memory.tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-1 bg-purple-500/30 text-purple-200 rounded-full text-xs font-medium"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
-                    <span className="text-white/50 text-xs sm:text-sm">
-                      {new Date(memory.updated_at || memory.created_at).toLocaleString('zh-CN')}
-                    </span>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleEditMemory(memory)}
-                        className="text-white/50 hover:text-white text-xs sm:text-sm transition-colors"
-                      >
-                        编辑
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMemory(memory.id)}
-                        className="text-white/50 hover:text-red-300 text-xs sm:text-sm transition-colors"
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-white/80 text-center py-20">
-              <p className="text-2xl mb-4">💭 还没有记忆</p>
-              <p>点击"添加记忆"开始记录你的第一个知识点吧！</p>
-            </div>
-          )}
+        {/* 书架区域 - 使用 BookShelf 组件 */}
+        <div className="max-w-7xl mx-auto pb-12">
+          <BookShelf
+            memories={displayMemories.map(m => ({
+              id: m.id,
+              title: m.title,
+              content: m.content,
+              tags: m.tags,
+              createdAt: m.created_at
+            }))}
+            onBookClick={(book) => setSelectedBook(book)}
+            onAddBook={() => setShowModal(true)}
+          />
         </div>
 
         {/* 添加/编辑记忆模态框 */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-gradient-to-br from-purple-900/90 to-indigo-900/90 rounded-xl p-4 sm:p-8 max-w-md w-full border border-white/20 my-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-6">
-                {editMemory ? '✏️ 编辑记忆' : '💭 添加记忆'}
-              </h2>
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="glass-panel rounded-2xl p-6 sm:p-8 max-w-lg w-full animate-scale-in border border-white/10 my-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 flex items-center justify-center text-2xl border border-white/10">
+                  {editMemory ? '✏️' : '📖'}
+                </div>
+                <h2 className="text-2xl font-bold text-white">
+                  {editMemory ? '编辑书籍' : '添加新书籍'}
+                </h2>
+              </div>
+              
               <form onSubmit={editMemory ? handleUpdateMemory : handleCreateMemory}>
-                <div className="mb-4">
-                  <label className="block text-white/80 text-xs sm:text-sm mb-2">标题 *</label>
+                <div className="mb-5">
+                  <label className="block text-white/70 text-sm mb-2 font-medium">书名 *</label>
                   <input
                     type="text"
                     value={newMemoryTitle}
                     onChange={(e) => setNewMemoryTitle(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 text-sm sm:text-base"
+                    className="w-full ios-card bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-cyan-400/50 transition-colors"
                     placeholder="例如：apple - 苹果"
                     autoFocus
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="block text-white/80 text-xs sm:text-sm mb-2">内容</label>
+                <div className="mb-5">
+                  <label className="block text-white/70 text-sm mb-2 font-medium">内容</label>
                   <textarea
                     value={newMemoryContent}
                     onChange={(e) => setNewMemoryContent(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 resize-none text-sm sm:text-base"
-                    placeholder="详细的记忆内容..."
-                    rows="4"
+                    className="w-full ios-card bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-cyan-400/50 transition-colors resize-none"
+                    placeholder="书籍的详细内容..."
+                    rows="5"
                   />
                 </div>
                 <div className="mb-6">
-                  <label className="block text-white/80 text-xs sm:text-sm mb-2">标签（用逗号分隔）</label>
+                  <label className="block text-white/70 text-sm mb-2 font-medium">标签（用逗号分隔）</label>
                   <input
                     type="text"
                     value={newMemoryTags}
                     onChange={(e) => setNewMemoryTags(e.target.value)}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-white/50 text-sm sm:text-base"
+                    className="w-full ios-card bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-cyan-400/50 transition-colors"
                     placeholder="例如：英语，词汇，重要"
                   />
-                  <p className="text-white/50 text-xs mt-1">多个标签用逗号分隔，例如：英语，词汇，重要</p>
+                  <p className="text-white/50 text-xs mt-2">多个标签用逗号分隔</p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg font-medium transition-all text-sm sm:text-base"
+                    className="flex-1 ios-button-secondary py-3 rounded-xl font-medium btn-press"
                   >
                     取消
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-lg font-medium transition-all text-sm sm:text-base"
+                    className="flex-1 ios-button py-3 rounded-xl font-medium btn-press"
                   >
-                    {editMemory ? '更新' : '保存'}
+                    {editMemory ? '更新' : '放入书架'}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* 书籍详情模态框 */}
+        {selectedBook && (
+          <BookDetailModal
+            book={selectedBook}
+            onClose={() => setSelectedBook(null)}
+            onEdit={handleEditMemory}
+            onDelete={() => confirmDelete(selectedBook.id)}
+          />
+        )}
+
+        {/* 确认删除对话框 */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="glass-panel rounded-2xl p-6 max-w-sm w-full animate-scale-in border border-white/10">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center text-3xl mx-auto mb-4">
+                  🗑️
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">删除书籍</h3>
+                <p className="text-white/60 text-sm">确定要删除这本书吗？此操作无法恢复。</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowConfirmDialog(false)
+                    setPendingDelete(null)
+                  }}
+                  className="flex-1 ios-button-secondary py-3 rounded-xl font-medium btn-press"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleDeleteMemory}
+                  className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 py-3 rounded-xl font-medium transition-colors btn-press"
+                >
+                  删除
+                </button>
+              </div>
             </div>
           </div>
         )}

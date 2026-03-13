@@ -5,146 +5,146 @@ import { getCurrentUser, logout } from '../lib/auth'
 
 export default function Home() {
   const [user, setUser] = useState(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     setUser(getCurrentUser())
   }, [])
 
+  if (!mounted) return null
+
   return (
-    <div className={styles.container}>
+    <>
       <Head>
         <title>记忆宫殿 - Memory Palace</title>
         <meta name="description" content="你的可视化知识管理系统" />
         <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          🏰 记忆宫殿
-        </h1>
-        <p className={styles.description}>
-          把你的知识，放进宫殿里
-        </p>
-
-        {/* 用户信息 */}
-        {user && (
-          <div className="mb-8 flex items-center gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-              <span className="text-white/80">👤 {user.name}</span>
+      <div className="tech-bg min-h-screen flex flex-col">
+        {/* 扫描线效果 */}
+        <div className="scan-line fixed top-0 left-0 right-0 z-50 pointer-events-none" />
+        
+        {/* 头部导航 */}
+        <header className="glass-panel sticky top-0 z-40 border-b-0">
+          <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg animate-pulse-glow">
+                🏰
+              </div>
+              <span className="text-white font-semibold text-lg hidden sm:block">Memory Palace</span>
             </div>
-            <button
-              onClick={() => {
-                logout()
-                window.location.reload()
-              }}
-              className="text-white/60 hover:text-white text-sm transition-colors"
-            >
-              退出
-            </button>
+            
+            {user && (
+              <div className="flex items-center gap-4">
+                <div className="ios-card px-4 py-2 flex items-center gap-2">
+                  <span className="text-white/80 text-sm">👤 {user.name}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    logout()
+                    window.location.reload()
+                  }}
+                  className="text-white/60 hover:text-white text-sm transition-colors btn-press"
+                >
+                  退出
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </header>
 
-        <div className={styles.features}>
-          <div className={styles.feature}>
-            <span className={styles.icon}>🧠</span>
-            <h3>空间化记忆</h3>
-            <p>利用位置记忆法，让知识更有组织</p>
-          </div>
-          <div className={styles.feature}>
-            <span className={styles.icon}>🎨</span>
-            <h3>视觉化呈现</h3>
-            <p>告别枯燥列表，用空间管理信息</p>
-          </div>
-          <div className={styles.feature}>
-            <span className={styles.icon}>🔗</span>
-            <h3>智能关联</h3>
-            <p>自动发现知识之间的联系</p>
-          </div>
-        </div>
+        {/* 主内容区 */}
+        <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 sm:py-20">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* 标题 - 科技感 */}
+            <div className="animate-fade-in-up mb-8">
+              <div className="inline-flex items-center gap-2 ios-card px-4 py-2 mb-6">
+                <span className="tech-dot" />
+                <span className="text-white/70 text-sm uppercase tracking-wider">Personal Knowledge System</span>
+              </div>
+              
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white mb-4 neon-glow">
+                记忆宫殿
+              </h1>
+              <p className="text-xl sm:text-2xl text-white/60 font-light">
+                把你的知识，<span className="text-gradient">放进图书馆里</span>
+              </p>
+            </div>
 
-        <div className={styles.cta}>
-          {user ? (
-            <Link href="/palaces">
-              <button className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-lg">
-                🚀 进入我的宫殿
-              </button>
-            </Link>
-          ) : (
-            <Link href="/login">
-              <button className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-lg font-medium transition-all backdrop-blur-sm border border-white/30 text-lg">
-                👤 开始使用
-              </button>
-            </Link>
-          )}
-          <p className="text-white/60 text-sm mt-4">v0.5.0 - 用户认证系统</p>
-        </div>
-      </main>
+            {/* 科技感分隔线 */}
+            <div className="tech-line max-w-md mx-auto mb-12" />
 
-      <footer className={styles.footer}>
-        <p>Memory Palace © 2026 - 你的可视化知识管理系统</p>
-      </footer>
-    </div>
+            {/* 特性展示 - iOS 风格卡片 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12">
+              <FeatureCard
+                icon="📚"
+                title="图书馆隐喻"
+                description="像整理书籍一样整理知识"
+                delay={0}
+              />
+              <FeatureCard
+                icon="✨"
+                title="空间化记忆"
+                description="用位置记住一切"
+                delay={100}
+              />
+              <FeatureCard
+                icon="🔮"
+                title="智能关联"
+                description="发现知识的隐藏联系"
+                delay={200}
+              />
+            </div>
+
+            {/* CTA 按钮 */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+              {user ? (
+                <Link href="/palaces">
+                  <button className="ios-button min-w-[200px]">
+                    📖 进入图书馆
+                  </button>
+                </Link>
+              ) : (
+                <Link href="/login">
+                  <button className="ios-button min-w-[200px]">
+                    🚀 开始使用
+                  </button>
+                </Link>
+              )}
+            </div>
+
+            {/* 版本信息 */}
+            <p className="text-white/40 text-xs mt-8">
+              v0.8.1 · 图书馆书架风格
+            </p>
+          </div>
+        </main>
+
+        {/* 底部 */}
+        <footer className="glass-panel border-t-0 py-6">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <p className="text-white/40 text-sm">
+              Memory Palace © 2026 · 你的可视化知识管理系统
+            </p>
+          </div>
+        </footer>
+      </div>
+    </>
   )
 }
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  },
-  main: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '2rem',
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: '4rem',
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: '1rem',
-    textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-  },
-  description: {
-    fontSize: '1.5rem',
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: '3rem',
-  },
-  features: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '2rem',
-    maxWidth: '900px',
-    width: '100%',
-    marginBottom: '3rem',
-  },
-  feature: {
-    background: 'rgba(255,255,255,0.1)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '1rem',
-    padding: '2rem',
-    border: '1px solid rgba(255,255,255,0.2)',
-    transition: 'all 0.3s ease',
-  },
-  icon: {
-    fontSize: '3rem',
-    display: 'block',
-    marginBottom: '1rem',
-  },
-  cta: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  footer: {
-    padding: '2rem',
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: '0.875rem',
-  },
+function FeatureCard({ icon, title, description, delay }) {
+  return (
+    <div 
+      className="ios-card p-6 text-left animate-fade-in-up"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="text-4xl mb-3">{icon}</div>
+      <h3 className="text-white font-semibold text-lg mb-2">{title}</h3>
+      <p className="text-white/60 text-sm leading-relaxed">{description}</p>
+    </div>
+  )
 }
