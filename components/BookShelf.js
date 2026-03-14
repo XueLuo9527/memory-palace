@@ -88,6 +88,7 @@ function BookSpine({ book, index, isHovered, onHover, onClick }) {
   ]
   
   const colorClass = colors[index % colors.length]
+  const hasImage = book.image && book.image.startsWith('data:image')
   
   return (
     <div
@@ -100,9 +101,9 @@ function BookSpine({ book, index, isHovered, onHover, onClick }) {
       <div 
         className={`
           book-spine
-          bg-gradient-to-b ${colorClass}
+          ${hasImage ? 'bg-gray-800' : `bg-gradient-to-b ${colorClass}`}
           relative overflow-hidden
-          neon-border
+          ${hasImage ? '' : 'neon-border'}
         `}
         style={{
           minWidth: '64px',
@@ -110,14 +111,37 @@ function BookSpine({ book, index, isHovered, onHover, onClick }) {
           height: '120px',
         }}
       >
-        {/* 书脊装饰线 */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-px bg-white/30" />
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-4 h-px bg-white/30" />
-        
-        {/* 书名（垂直） */}
-        <div className="book-spine-label flex-1 py-2">
-          {book.title || '无题'}
-        </div>
+        {hasImage ? (
+          // 显示封面图片
+          <div className="w-full h-full relative">
+            <img 
+              src={book.image} 
+              alt={book.title || '封面'}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-1 left-0 right-0 text-center">
+              <div className="text-white text-xs font-semibold truncate px-1 drop-shadow-lg">
+                {book.title?.substring(0, 10) || '无题'}
+              </div>
+            </div>
+          </div>
+        ) : (
+          // 显示书脊
+          <>
+            {/* 书脊装饰线 */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-px bg-white/30" />
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-4 h-px bg-white/30" />
+            
+            {/* 书名（垂直） */}
+            <div className="book-spine-label flex-1 py-2">
+              {book.title || '无题'}
+            </div>
+            
+            {/* 光泽效果 */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/5 pointer-events-none" />
+          </>
+        )}
         
         {/* 悬停提示 */}
         {isHovered && (
@@ -128,12 +152,14 @@ function BookSpine({ book, index, isHovered, onHover, onClick }) {
                 {book.content}
               </div>
             )}
+            {book.tags && book.tags.length > 0 && (
+              <div className="text-white/50 text-xs mt-1">
+                #{book.tags.join(' #')}
+              </div>
+            )}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 glass-panel border-r border-b border-white/10" />
           </div>
         )}
-        
-        {/* 光泽效果 */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/5 pointer-events-none" />
       </div>
     </div>
   )
@@ -168,6 +194,17 @@ export function BookDetailModal({ book, onClose, onEdit, onDelete }) {
             ×
           </button>
         </div>
+
+        {/* 封面图片 */}
+        {book.image && book.image.startsWith('data:image') && (
+          <div className="mb-6 rounded-xl overflow-hidden border border-white/10">
+            <img 
+              src={book.image} 
+              alt={book.title || '封面'}
+              className="w-full h-64 object-cover"
+            />
+          </div>
+        )}
 
         {/* 内容区 */}
         <div className="ios-card bg-white/5 rounded-xl p-4 mb-6">

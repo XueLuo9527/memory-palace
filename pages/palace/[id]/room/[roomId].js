@@ -17,6 +17,9 @@ export default function RoomDetail() {
   const [newMemoryTitle, setNewMemoryTitle] = useState('')
   const [newMemoryContent, setNewMemoryContent] = useState('')
   const [newMemoryTags, setNewMemoryTags] = useState('')
+  const [newMemoryImage, setNewMemoryImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [selectedTag, setSelectedTag] = useState(null)
   const [allTags, setAllTags] = useState([])
   const [loading, setLoading] = useState(true)
@@ -102,6 +105,35 @@ export default function RoomDetail() {
     }
   }
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      alert('请选择图片文件')
+      return
+    }
+
+    // 验证文件大小（2MB）
+    if (file.size > 2 * 1024 * 1024) {
+      alert('图片大小不能超过 2MB')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setNewMemoryImage(e.target.result)
+      setImagePreview(e.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    setNewMemoryImage(null)
+    setImagePreview(null)
+  }
+
   const handleCreateMemory = async (e) => {
     e.preventDefault()
     if (!newMemoryTitle.trim() || !user) return
@@ -120,7 +152,8 @@ export default function RoomDetail() {
           roomId: roomId,
           title: newMemoryTitle,
           content: newMemoryContent,
-          tags: tagsArray
+          tags: tagsArray,
+          image: newMemoryImage // 添加图片
         })
       })
       
@@ -131,6 +164,8 @@ export default function RoomDetail() {
         setNewMemoryTitle('')
         setNewMemoryContent('')
         setNewMemoryTags('')
+        setNewMemoryImage(null)
+        setImagePreview(null)
       }
     } catch (error) {
       console.error('创建记忆失败:', error)
@@ -142,6 +177,8 @@ export default function RoomDetail() {
     setNewMemoryTitle(memory.title)
     setNewMemoryContent(memory.content)
     setNewMemoryTags(memory.tags?.join(', ') || '')
+    setNewMemoryImage(memory.image || null)
+    setImagePreview(memory.image || null)
     setShowModal(true)
     setSelectedBook(null)
   }
@@ -415,6 +452,41 @@ export default function RoomDetail() {
                     rows="5"
                   />
                 </div>
+                <div className="mb-5">
+                  <label className="block text-white/70 text-sm mb-2 font-medium">封面图片（可选）</label>
+                  <div className="ios-card bg-white/5 border border-white/10 rounded-xl p-4">
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img 
+                          src={imagePreview} 
+                          alt="预览" 
+                          className="w-full h-48 object-cover rounded-lg mb-3"
+                        />
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center py-6 cursor-pointer">
+                        <div className="text-4xl mb-2">📷</div>
+                        <span className="text-white/70 text-sm mb-2">点击上传图片</span>
+                        <span className="text-white/50 text-xs">支持 JPG、PNG、GIF、WebP，最大 2MB</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          disabled={uploading}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
                 <div className="mb-6">
                   <label className="block text-white/70 text-sm mb-2 font-medium">标签（用逗号分隔）</label>
                   <input

@@ -312,7 +312,7 @@ function LibraryCard({ palace, index, onDelete }) {
       {/* 书架顶部装饰线 */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent rounded-t-2xl" />
       
-      <Link href={`/palace/${palace.id}`}>
+      <Link href={`/palace/${palace.id}/view3d`}>
         {/* 图书馆封面 */}
         <div className="mb-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 flex items-center justify-center text-3xl mb-3 border border-white/10 group-hover:scale-110 transition-transform duration-300">

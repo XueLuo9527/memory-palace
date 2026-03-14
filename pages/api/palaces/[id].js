@@ -63,14 +63,14 @@ export default async function handler(req, res) {
   }
   
   if (req.method === 'POST') {
-    const { roomId, title, content, name, description, tags } = req.body
+    const { roomId, title, content, name, description, tags, image } = req.body
     
     if (roomId) {
       // 在房间中创建记忆
       if (!title) {
         return res.status(400).json({ error: '记忆标题不能为空' })
       }
-      const memory = await createMemory(roomId, title, content || '', tags || [])
+      const memory = await createMemory(roomId, title, content || '', tags || [], image || null)
       if (!memory) {
         return res.status(500).json({ error: '创建记忆失败' })
       }
