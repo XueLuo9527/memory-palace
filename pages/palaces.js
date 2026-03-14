@@ -25,21 +25,33 @@ export default function Palaces() {
     type: 'info',
     onConfirm: null
   })
+  const [mounted, setMounted] = useState(false)
   
   const showToast = (message, type = 'success') => {
     setToast({ message, type, visible: true })
   }
 
+  // 组件挂载时标记
   useEffect(() => {
-    if (!authLoading && !user) {
+    setMounted(true)
+  }, [])
+
+  // 认证检查 - 只在挂载后且加载完成后执行
+  useEffect(() => {
+    if (!mounted) return
+    
+    // 加载中的时候不跳转
+    if (authLoading) return
+    
+    // 只有确定没有用户时才跳转到登录页
+    if (!user) {
       router.push('/login')
       return
     }
     
-    if (user) {
-      fetchPalaces(user.id)
-    }
-  }, [user, authLoading, router])
+    // 有用户时才获取宫殿数据
+    fetchPalaces(user.id)
+  }, [user, authLoading, mounted, router])
 
   const fetchPalaces = async (userId) => {
     try {
@@ -113,7 +125,7 @@ export default function Palaces() {
     })
   }
 
-  if (authLoading) {
+  if (!mounted || authLoading) {
     return (
       <div className="tech-bg min-h-screen flex items-center justify-center">
         <div className="text-white/60 text-lg">加载中...</div>

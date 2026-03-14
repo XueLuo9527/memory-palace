@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext } from 'react'
+import { useEffect, useState, createContext, useContext } from 'react'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import { getCurrentUser, logout as authLogout } from '../lib/auth'
