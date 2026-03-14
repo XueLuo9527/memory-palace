@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import { getCurrentUser, logout } from '../../../../lib/auth'
+import { UserContext } from '../../../../pages/_app'
 import BookShelf, { BookDetailModal } from '../../../../components/BookShelf'
 
 export default function RoomDetail() {
   const router = useRouter()
   const { id, roomId } = router.query
-  const [user, setUser] = useState(null)
+  const { user, loading: authLoading, logout } = useContext(UserContext)
+  const [mounted, setMounted] = useState(false)
   const [room, setRoom] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState(null)
@@ -30,18 +31,23 @@ export default function RoomDetail() {
   const [pendingDelete, setPendingDelete] = useState(null)
 
   useEffect(() => {
-    const currentUser = getCurrentUser()
-    if (!currentUser) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    if (authLoading) return
+    
+    if (!user) {
       router.push('/login')
       return
     }
-    setUser(currentUser)
     
     if (id && roomId) {
-      fetchRoom(currentUser.id)
+      fetchRoom(user.id)
       fetchTags()
     }
-  }, [id, roomId, router])
+  }, [id, roomId, user, authLoading, mounted, router])
 
   const fetchRoom = async (userId) => {
     try {
@@ -261,10 +267,9 @@ export default function RoomDetail() {
   const handleLogout = () => {
     if (!confirm('确定要退出登录吗？')) return
     logout()
-    router.push('/login')
   }
 
-  if (loading) {
+  if (!mounted || authLoading || loading) {
     return (
       <div className="tech-bg min-h-screen flex items-center justify-center">
         <div className="text-white/60 text-lg">加载中...</div>

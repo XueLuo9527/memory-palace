@@ -1,33 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import { getCurrentUser, logout } from '../../../lib/auth'
+import { UserContext } from '../../../pages/_app'
 import Library3D from '../../../components/Library3D'
 import Toast from '../../../components/Toast'
 
 export default function Palace3DView() {
   const router = useRouter()
   const { id } = router.query
-  const [user, setUser] = useState(null)
+  const { user, loading: authLoading, logout } = useContext(UserContext)
   const [palace, setPalace] = useState(null)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState('3d') // '3d' or '2d'
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const currentUser = getCurrentUser()
-    if (!currentUser) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    if (authLoading) return
+    
+    if (!user) {
       router.push('/login')
       return
     }
-    setUser(currentUser)
     
     if (id) {
-      fetchPalace(currentUser.id)
+      fetchPalace(user.id)
     }
-  }, [id, router])
+  }, [id, user, authLoading, mounted, router])
 
   const fetchPalace = async (userId) => {
     try {
@@ -52,7 +58,7 @@ export default function Palace3DView() {
     setTimeout(() => setShowToast(false), 2000)
   }
 
-  if (loading) {
+  if (!mounted || authLoading || loading) {
     return (
       <div className="tech-bg min-h-screen flex items-center justify-center">
         <div className="text-white/60 text-lg">加载中...</div>
@@ -104,7 +110,6 @@ export default function Palace3DView() {
                     <button
                       onClick={() => {
                         logout()
-                        router.push('/login')
                       }}
                       className="text-white/60 hover:text-white text-sm transition-colors btn-press"
                     >
